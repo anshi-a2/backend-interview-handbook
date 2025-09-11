@@ -1,8 +1,7 @@
 # Prompt Engineering Fundamentals
 
-[![Prompt Engineering Fundamentals](./images/04-lesson-banner.png?WT.mc_id=academic-105485-koreyst)](https://aka.ms/gen-ai-lesson4-gh?WT.mc_id=academic-105485-koreyst)
-
 ## Introduction
+
 This module covers essential concepts and techniques for creating effective prompts in generative AI models. The way your write your prompt to an LLM also matters. A carefully-crafted prompt can achieve a better quality of response. But what exactly do terms like _prompt_ and _prompt engineering_ mean? And how do I improve the prompt _input_ that I send to the LLM? These are the questions we'll try to answer with in this chapter and the next.
 
 _Generative AI_ is capable of creating new content (e.g., text, images, audio, code etc.) in response to user requests. It achieves this using _Large Language Models_ like OpenAI's GPT ("Generative Pre-trained Transformer") series that are trained for using natural language and code.
@@ -32,19 +31,14 @@ Instruction-Tuned LLMs: Large Language Models (LLMs) that have been fine-tuned w
 
 Prompt engineering is currently more art than science. The best way to improve our intuition for it is to _practice more_ and adopt a trial-and-error approach that combines application domain expertise with recommended techniques and model-specific optimizations.
 
-The Jupyter Notebook accompanying this lesson provides a _sandbox_ environment where you can try out what you learn - as you go or as part of the code challenge at the end. To execute the exercises, you will need:
 
-1. **An Azure OpenAI API key** - the service endpoint for a deployed LLM.
-2. **A Python Runtime** - in which the Notebook can be executed.
-3. **Local Env Variables** - _complete the [SETUP](./../00-course-setup/02-setup-local.md?WT.mc_id=academic-105485-koreyst) steps now to get ready_.
-
-The notebook comes with _starter_ exercises - but you are encouraged to add your own _Markdown_ (description) and _Code_ (prompt requests) sections to try out more examples or ideas - and build your intuition for prompt design.
 
 ## Illustrated Guide
 
 Want to get the big picture of what this lesson covers before you dive in? Check out this illustrated guide, which gives you a sense of the main topics covered and the key takeaways for you to think about in each one. The lesson roadmap takes you from understanding the core concepts and challenges to addressing them with relevant prompt engineering techniques and best practices. Note that the "Advanced Techniques" section in this guide refers to content covered in the _next_ chapter of this curriculum.
 
-![Illustrated Guide to Prompt Engineering](./images/04-prompt-engineering-sketchnote.png?WT.mc_id=academic-105485-koreyst)
+<img width="1041" height="579" alt="image" src="https://github.com/user-attachments/assets/f3c316e3-d9f2-41d3-9f76-7ea3eceb09ae" />
+
 
 ## Our Startup
 
@@ -85,7 +79,8 @@ An LLM sees prompts as a _sequence of tokens_ where different models (or version
 
 To get an intuition for how tokenization works, try tools like the [OpenAI Tokenizer](https://platform.openai.com/tokenizer?WT.mc_id=academic-105485-koreyst) shown below. Copy in your prompt - and see how that gets converted into tokens, paying attention to how whitespace characters and punctuation marks are handled. Note that this example shows an older LLM (GPT-3) - so trying this with a newer model may produce a different result.
 
-![Tokenization](./images/04-tokenizer-example.png?WT.mc_id=academic-105485-koreyst)
+<img width="1041" height="824" alt="image" src="https://github.com/user-attachments/assets/1b7127fd-1688-4719-b55d-bc3dc5a93604" />
+
 
 ### Concept: Foundation Models
 
@@ -95,7 +90,7 @@ Want to see how prompt-based completion works? Enter the above prompt into the A
 
 But what if the user wanted to see something specific that met some criteria or task objective? This is where _instruction-tuned_ LLMs come into the picture.
 
-![Base LLM Chat Completion](./images/04-playground-chat-base.png?WT.mc_id=academic-105485-koreyst)
+
 
 ### Concept: Instruction Tuned LLMs
 
@@ -107,9 +102,7 @@ Let's try it out - revisit the prompt above, but now change the _system message_
 
 > _Summarize content you are provided with for a second-grade student. Keep the result to one paragraph with 3-5 bullet points._
 
-See how the result is now tuned to reflect the desired goal and format? An educator can now directly use this response in their slides for that class.
 
-![Instruction Tuned LLM Chat Completion](./images/04-playground-chat-instructions.png?WT.mc_id=academic-105485-koreyst)
 
 ## Why do we need Prompt Engineering?
 
@@ -140,15 +133,18 @@ So what happens when we run this prompt with different LLM providers?
 
 > **Response 1**: OpenAI Playground (GPT-35)
 
-![Response 1](./images/04-fabrication-oai.png?WT.mc_id=academic-105485-koreyst)
+<img width="1041" height="824" alt="image" src="https://github.com/user-attachments/assets/6a29e098-5269-4d9d-8633-aa8c55062b96" />
+
 
 > **Response 2**: Azure OpenAI Playground (GPT-35)
 
-![Response 2](./images/04-fabrication-aoai.png?WT.mc_id=academic-105485-koreyst)
+<img width="1041" height="736" alt="image" src="https://github.com/user-attachments/assets/f487024e-4f82-4249-b38c-d22cb81bbf65" />
+
 
 > **Response 3**: : Hugging Face Chat Playground (LLama-2)
 
-![Response 3](./images/04-fabrication-huggingchat.png?WT.mc_id=academic-105485-koreyst)
+<img width="1041" height="853" alt="image" src="https://github.com/user-attachments/assets/93632b84-df72-4e06-92c1-ed9c496a5d7e" />
+
 
 As expected, each model (or model version) produces slightly different responses thanks to stochastic behavior and model capability variations. For instance, one model targets an 8th grade audience while the other assumes a high-school student. But all three models did generate responses that could convince an uninformed user that the event was real
 
@@ -342,45 +338,6 @@ Now let's look at common best practices that are recommended by [OpenAI](https:/
 
 As with any best practice, remember that _your mileage may vary_ based on the model, the task and the domain. Use these as a starting point, and iterate to find what works best for you. Constantly re-evaluate your prompt engineering process as new models and tools become available, with a focus on process scalability and response quality.
 
-<!--
-LESSON TEMPLATE:
-This unit should provide a code challenge if applicable
-
-CHALLENGE:
-Link to a Jupyter Notebook with only the code comments in the instructions (code sections are empty).
-
-SOLUTION:
-Link to a copy of that Notebook with the prompts filled in and run, showing what one example could be.
--->
-
-## Assignment
-
-Congratulations! You made it to the end of the lesson! It's time to put some of those concepts and techniques to the test with real examples!
-
-For our assignment, we'll be using a Jupyter Notebook with exercises you can complete interactively. You can also extend the Notebook with your own Markdown and Code cells to explore ideas and techniques on your own.
-
-### To get started, fork the repo, then
-
-- (Recommended) Launch GitHub Codespaces
-- (Alternatively) Clone the repo to your local device and use it with Docker Desktop
-- (Alternatively) Open the Notebook with your preferred Notebook runtime environment.
-
-### Next, configure your environment variables
-
-- Copy the `.env.copy` file in repo root to `.env` and fill in the `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_DEPLOYMENT` values. Come back to [Learning Sandbox section](./04-prompt-engineering-fundamentals#learning-sandbox) to learn how.
-
-### Next, open the Jupyter Notebook
-
-- Select the runtime kernel. If using options 1 or 2, simply select the default Python 3.10.x kernel provided by the dev container.
-
-You're all set to run the exercises. Note that there are no _right and wrong_ answers here - just exploring options by trial-and-error and building intuition for what works for a given model and application domain.
-
-_For this reason there are no Code Solution segments in this lesson. Instead, the Notebook will have Markdown cells titled "My Solution:" that shows one example output for reference._
-
- <!--
-LESSON TEMPLATE:
-Wrap the section with a summary and resources for self-guided learning.
--->
 
 ## Knowledge check
 
@@ -396,8 +353,7 @@ A: 2, it's the best prompt as it provides details on "what" and goes into specif
 
 See if you can leverage the "cue" technique with the prompt: Complete the sentence "Show me an image of red car of make Volvo and ". What does it respond with, and how would you improve it?
 
-## Great Work! Continue Your Learning
+## Referenece docs :
 
-Want to learn more about different Prompt Engineering concepts? Go to the [continued learning page](https://aka.ms/genai-collection?WT.mc_id=academic-105485-koreyst) to find other great resources on this topic.
+1. https://aka.ms/genai-collection?WT.mc_id=academic-105485-koreyst
 
-Head over to Lesson 5 where we will look at [advanced prompting techniques](../05-advanced-prompts/README.md?WT.mc_id=academic-105485-koreyst)!
