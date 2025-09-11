@@ -124,4 +124,7 @@ Read up on [Azure AI Content Safety](https://learn.microsoft.com/azure/ai-servic
 
 ## Great Work, Continue Your Learning
 
-reference doc :  [Generative AI Learning collection](https://aka.ms/genai-collection?WT.mc_id=academic-105485-koreyst) 
+### reference doc :  
+
+1. [Generative AI Learning collection](https://aka.ms/genai-collection?WT.mc_id=academic-105485-koreyst)
+2. https://aka.ms/gen-ai-lesson3-gh?WT.mc_id=academic-105485-koreyst
