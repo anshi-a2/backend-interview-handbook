@@ -292,3 +292,272 @@ A deployment plan is incomplete without rollback.
 
 ---
 
+# Secrets Management & Handling Partial Failures – Java Backend Interview Guide
+
+## Part 1: 🔒 Secrets Management & Configuration During Deployment
+
+## 1. Why Secrets Management Matters
+
+**Secrets** include:
+
+* Database passwords
+* API keys
+* OAuth tokens
+* Encryption keys
+
+Hardcoding secrets or putting them in Git can lead to:
+
+* Security breaches
+* Credential leaks
+* Compliance violations (PCI, SOC2)
+
+> Interviewers want to know if you can deploy **securely at scale**.
+
+---
+
+## 2. What Is Configuration vs Secrets?
+
+| Type          | Examples                      | Can Be in Git? |
+| ------------- | ----------------------------- | -------------- |
+| Configuration | Timeouts, URLs, feature flags | ✅ Yes          |
+| Secrets       | Passwords, tokens, keys       | ❌ Never        |
+
+---
+
+## 3. Bad Practices (Red Flags in Interviews)
+
+❌ Secrets in `application.yml`
+❌ Secrets passed as command-line args
+❌ Secrets checked into Git (even private repos)
+
+---
+
+## 4. Recommended Ways to Manage Secrets
+
+### 4.1 Environment Variables
+
+**How it works:**
+
+* Secrets injected at runtime
+* App reads via environment
+
+**Java Example:**
+
+```java
+System.getenv("DB_PASSWORD");
+```
+
+**Pros:**
+
+* Simple
+* Widely supported
+
+**Cons:**
+
+* Hard to rotate
+* Visible to process
+
+---
+
+### 4.2 Secrets Manager (Best Practice)
+
+**Examples:**
+
+* AWS Secrets Manager
+* HashiCorp Vault
+* Azure Key Vault
+
+**How it works:**
+
+* App fetches secrets securely at startup or runtime
+
+**Pros:**
+
+* Encryption
+* Rotation support
+* Audit logs
+
+---
+
+### 4.3 Kubernetes Secrets
+
+* Mounted as files or env vars
+* Integrated with cloud KMS
+
+---
+
+## 5. Config Management During Deploy
+
+### Key Principles
+
+* Externalize configuration
+* Same artifact across environments
+* Config changes without redeploy
+
+---
+
+### Tools
+
+* Spring Cloud Config
+* Feature flag systems (LaunchDarkly)
+* Environment-based profiles
+
+---
+
+## 6. Secrets Rotation Without Downtime
+
+**Approach:**
+
+1. Support multiple valid secrets
+2. Rotate in secret store
+3. Gradually reload applications
+
+> Zero-downtime rotation is a strong signal in interviews.
+
+---
+
+## 7. Interview-Ready One-Paragraph Answer (Secrets)
+
+> "Secrets should never be stored in code or Git. They are managed using environment variables or dedicated secret managers like Vault or AWS Secrets Manager. Applications load secrets at runtime, support rotation, and keep configuration externalized so the same build artifact can be deployed safely across environments."
+
+---
+
+---
+
+## Part 2: ⚡ Handling Partial Failures After Deployment
+
+## 8. What Is a Partial Failure?
+
+A **partial failure** occurs when:
+
+* Some services are healthy
+* Others are failing or degraded
+
+Common in microservices and distributed systems.
+
+---
+
+## 9. Why Partial Failures Are Dangerous
+
+* Cascading failures
+* Thread pool exhaustion
+* System-wide outage
+
+> Most production outages are due to **unhandled partial failures**, not total crashes.
+
+---
+
+## 10. Core Strategies to Handle Partial Failures
+
+### 10.1 Timeouts (Mandatory)
+
+Never wait indefinitely.
+
+```java
+RestTemplate timeout = ...
+```
+
+---
+
+### 10.2 Retries (With Limits)
+
+**Rules:**
+
+* Retry only idempotent calls
+* Use exponential backoff
+
+❌ Infinite retries = meltdown
+
+---
+
+### 10.3 Circuit Breaker
+
+**Purpose:**
+
+* Stop calling failing services
+* Fail fast
+
+**States:**
+
+* Closed → Open → Half-open
+
+**Tools:**
+
+* Resilience4j
+* Hystrix (legacy)
+
+---
+
+### 10.4 Bulkheads
+
+**Idea:**
+
+* Isolate resources
+
+**Example:**
+
+* Separate thread pools per dependency
+
+---
+
+### 10.5 Fallbacks
+
+**Examples:**
+
+* Cached response
+* Graceful degradation
+
+---
+
+## 11. Deployment-Time Failure Handling
+
+During deploy:
+
+* New version fails health checks → remove from LB
+* Canary fails → rollback
+
+**Key rule:**
+
+> Never let a bad instance receive full traffic.
+
+---
+
+## 12. Observability for Partial Failures
+
+Monitor:
+
+* Error rates per dependency
+* Latency percentiles (P95, P99)
+* Saturation (CPU, threads)
+
+---
+
+## 13. Real Banking Example
+
+### Payment Service Dependency Failure
+
+* Circuit breaker opens
+* Payment blocked (fail fast)
+* Ledger remains consistent
+
+> Correctness > availability
+
+---
+
+## 14. Interview-Ready One-Paragraph Answer (Failures)
+
+> "Partial failures are handled using timeouts, retries with backoff, circuit breakers, and bulkheads to prevent cascading failures. During deployments, health checks and canary releases ensure faulty versions are isolated quickly. Systems are designed to fail fast and degrade gracefully while preserving data correctness."
+
+---
+
+## 15. One-Line Takeaways
+
+* Secrets ≠ configuration
+* Never store secrets in Git
+* Partial failures are the norm
+* Circuit breakers prevent outages
+
+---
+
+
+
