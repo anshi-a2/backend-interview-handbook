@@ -1,24 +1,35 @@
-# HashMap vs Map vs ConcurrentHashMap - Complete Deep Dive
+# Java Map, HashMap & ConcurrentHashMap - Complete Deep Dive
 
-# 1. First Understand: What is a Map?
+# Table of Contents
 
-Map is an Interface.
+1. What is a Map?
+2. Map Hierarchy
+3. Why HashMap Exists
+4. HashMap Internal Structure
+5. HashMap Put Operation
+6. HashMap Get Operation
+7. hashCode() Explained
+8. equals() Explained
+9. hashCode() and equals() Contract
+10. Collision Handling
+11. Load Factor
+12. Rehashing / Resizing
+13. Treeification (Java 8)
+14. HashMap Complexity
+15. Why Capacity is Power of 2
+16. Null Keys and Values
+17. HashMap Thread Safety
+18. ConcurrentHashMap Internals
+19. Why ConcurrentHashMap Disallows Null
+20. HashMap vs ConcurrentHashMap
+21. Interview Questions
+22. Quick Revision Notes
 
-```java
-public interface Map<K,V>
-```
+---
 
-It defines the contract:
+# 1. What is a Map?
 
-```java
-put(K key, V value)
-get(K key)
-remove(K key)
-containsKey(K key)
-size()
-```
-
-A Map stores:
+Map is an interface that stores data as:
 
 ```text
 Key -> Value
@@ -33,42 +44,43 @@ map.put("A",100);
 map.put("B",200);
 ```
 
-Internally, Map itself stores nothing.
+Map defines operations:
 
-It only defines behavior.
-
-Think:
-
-```text
-Map = Blueprint
-
-HashMap = Implementation
-ConcurrentHashMap = Implementation
-TreeMap = Implementation
-Hashtable = Implementation
+```java
+put(K,V)
+get(K)
+remove(K)
+containsKey(K)
+size()
 ```
+
+Map itself contains no implementation.
+
+It only defines a contract.
 
 ---
 
-# Collection Hierarchy
+# 2. Map Hierarchy
 
 ```text
-Iterable
-    |
-Collection
-    |
---------------------------------
-|              |              |
-List           Set          Queue
-
-Map (Separate Hierarchy)
+Map (Interface)
+ |
+ +-- HashMap
+ |
+ +-- ConcurrentHashMap
+ |
+ +-- TreeMap
+ |
+ +-- Hashtable
+ |
+ +-- LinkedHashMap
 ```
 
-Map is NOT part of Collection hierarchy.
+Map is separate from Collection hierarchy.
 
 ---
 
-# Why HashMap Exists
+# 3. Why HashMap Exists
 
 Without hashing:
 
@@ -78,7 +90,7 @@ B -> 200
 C -> 300
 ```
 
-Searching requires:
+Search requires:
 
 ```text
 A -> B -> C
@@ -86,25 +98,23 @@ A -> B -> C
 
 Complexity:
 
-O(n)
-
-HashMap converts:
-
 ```text
-Key
- ↓
-Hash Function
- ↓
-Bucket Index
+O(n)
 ```
 
-so lookup becomes nearly O(1).
+HashMap uses hashing to achieve:
+
+```text
+O(1)
+```
+
+average lookup.
 
 ---
 
-# Core Components of HashMap
+# 4. HashMap Internal Structure
 
-Internally HashMap uses:
+HashMap internally uses:
 
 ```text
 Array
@@ -125,46 +135,25 @@ table[]
 1
 2 -> Node -> Node
 3
-4 -> Node
-5
-```
-
----
-
-# Internal Node Structure
-
-```java
-static class Node<K,V> {
-
-    final int hash;
-    final K key;
-    V value;
-
-    Node<K,V> next;
-}
+4
+5 -> Node
 ```
 
 Every entry becomes a Node.
 
-Example:
-
 ```java
-map.put("A",100);
-```
+static class Node<K,V> {
 
-Creates:
-
-```text
-Node
- hash
- key=A
- value=100
- next=null
+    int hash;
+    K key;
+    V value;
+    Node<K,V> next;
+}
 ```
 
 ---
 
-# Put Operation Internals
+# 5. HashMap Put Operation
 
 Example:
 
@@ -172,79 +161,242 @@ Example:
 map.put("apple",100);
 ```
 
-Step 1
+### Step 1
 
-Compute hash.
+Calculate hash.
 
 ```java
 int hash = key.hashCode();
 ```
 
-Suppose:
+Example:
 
 ```text
-hash = 12345
+12345
 ```
 
-Step 2
+### Step 2
 
 Find bucket.
 
 ```java
-index = hash % capacity
+index = hash & (capacity - 1);
 ```
 
 Assume:
 
 ```text
-12345 % 16 = 9
+capacity = 16
+
+index = 9
 ```
 
-Step 3
+### Step 3
 
-Store inside bucket 9.
+Store in bucket.
 
 ```text
 table[9]
-   |
-Node(A,100)
+
+(apple,100)
 ```
+
+### Step 4
+
+If bucket already contains nodes:
+
+* Compare keys
+* Update if found
+* Otherwise append new node
 
 ---
 
-# What is Capacity?
-
-Default:
+# 6. HashMap Get Operation
 
 ```java
-new HashMap<>();
+map.get("apple");
 ```
 
-creates:
+Steps:
+
+1. Calculate hash
+2. Find bucket
+3. Traverse bucket
+4. Match key
+5. Return value
+
+Average complexity:
 
 ```text
-capacity = 16
-```
-
-Meaning:
-
-```text
-16 buckets
-```
-
-```text
-0
-1
-2
-...
-15
+O(1)
 ```
 
 ---
 
-# What is Collision?
+# 7. hashCode() Explained
 
-Two different keys may generate same bucket.
+hashCode determines:
+
+```text
+Which bucket should be searched?
+```
+
+Example:
+
+```java
+hash("apple") = 12345
+```
+
+Bucket:
+
+```java
+12345 % 16 = 9
+```
+
+HashMap jumps directly to bucket 9.
+
+Without hashCode:
+
+```text
+Search every element
+```
+
+O(n)
+
+---
+
+# 8. equals() Explained
+
+Many developers misunderstand this.
+
+HashMap uses:
+
+```text
+hashCode()
+to locate bucket
+
+equals()
+to locate exact key
+```
+
+Think:
+
+```text
+hashCode() -> Building Number
+
+equals() -> Apartment Number
+```
+
+---
+
+## Example
+
+```java
+String s1 = new String("ABC");
+String s2 = new String("ABC");
+```
+
+Different objects:
+
+```java
+s1 == s2
+```
+
+returns:
+
+```text
+false
+```
+
+But:
+
+```java
+s1.equals(s2)
+```
+
+returns:
+
+```text
+true
+```
+
+Therefore:
+
+```java
+map.put(s1,100);
+
+map.get(s2);
+```
+
+returns:
+
+```text
+100
+```
+
+---
+
+# 9. hashCode() and equals() Contract
+
+If:
+
+```java
+a.equals(b)
+```
+
+returns:
+
+```text
+true
+```
+
+then:
+
+```java
+a.hashCode() == b.hashCode()
+```
+
+MUST be true.
+
+Otherwise HashMap breaks.
+
+---
+
+## Bad Example
+
+Override equals only:
+
+```java
+@Override
+public boolean equals(...)
+```
+
+but not:
+
+```java
+@Override
+public int hashCode()
+```
+
+Result:
+
+```text
+Put goes to one bucket
+
+Get searches another bucket
+```
+
+Lookup fails.
+
+---
+
+# 10. Collision Handling
+
+Collision:
+
+```text
+Two keys map to same bucket
+```
 
 Example:
 
@@ -254,77 +406,104 @@ apple -> bucket 5
 banana -> bucket 5
 ```
 
-Both go to same location.
-
-This is Collision.
-
----
-
-# Collision Handling
-
-HashMap uses Separate Chaining.
+Structure:
 
 ```text
 Bucket[5]
 
-apple -> banana -> cat
+apple
+  |
+banana
 ```
 
-Linked list inside bucket.
+This is called:
+
+```text
+Separate Chaining
+```
+
+---
+
+# 11. Load Factor
+
+Formula:
+
+```text
+loadFactor = size / capacity
+```
+
+Default:
+
+```java
+0.75f
+```
 
 Example:
 
 ```text
-table[5]
-     |
-     v
+size = 12
+capacity = 16
 
-[A]
- |
- v
-[B]
- |
- v
-[C]
+loadFactor = 0.75
 ```
 
 ---
 
-# Search During Collision
+# Why Load Factor Matters
 
-Need:
+Higher load factor:
+
+```text
+More collisions
+```
+
+Lower performance.
+
+---
+
+# 12. Rehashing / Resizing
+
+When:
+
+```text
+loadFactor > 0.75
+```
+
+HashMap resizes.
+
+Example:
+
+```text
+16 -> 32
+
+32 -> 64
+
+64 -> 128
+```
+
+Every node must be redistributed.
+
+Why?
+
+Because:
 
 ```java
-map.get("B")
+index = hash & (capacity - 1)
 ```
 
-Go to bucket.
-
-```text
-bucket 5
-```
-
-Traverse:
-
-```text
-A
-↓
-B
-```
-
-Found.
+changes when capacity changes.
 
 ---
 
-# Java 8 Treeification
+# 13. Treeification (Java 8)
 
-Suppose collisions become huge.
+Heavy collision:
 
 ```text
 A -> B -> C -> D -> E -> F -> G -> H -> I
 ```
 
-Linked list search:
+Search:
 
 ```text
 O(n)
@@ -339,98 +518,20 @@ Red Black Tree
 Condition:
 
 ```text
-Bucket size >= 8
+Bucket Size >= 8
 ```
 
-Now complexity becomes:
+Now:
 
 ```text
 O(log n)
 ```
 
----
-
-# Load Factor
-
-Most important interview topic.
-
-Formula:
-
-```text
-loadFactor = size / capacity
-```
-
-Example:
-
-```text
-size = 12
-
-capacity = 16
-
-loadFactor = 0.75
-```
-
-Default:
-
-```java
-0.75f
-```
+lookup.
 
 ---
 
-# Why Load Factor Matters
-
-As bucket occupancy increases:
-
-```text
-Collisions increase
-```
-
-Performance decreases.
-
----
-
-# Rehashing
-
-When:
-
-```text
-loadFactor > 0.75
-```
-
-Resize.
-
-```text
-16 -> 32
-
-32 -> 64
-
-64 -> 128
-```
-
----
-
-# Why Rehashing Needed
-
-Index formula:
-
-```text
-hash % capacity
-```
-
-If capacity changes:
-
-```text
-16 -> 32
-```
-
-all bucket positions change.
-
-Therefore every node must be redistributed.
-
----
-
-# HashMap Complexity
+# 14. HashMap Complexity
 
 | Operation | Average | Worst |
 | --------- | ------- | ----- |
@@ -446,221 +547,9 @@ All keys collide
 
 ---
 
-# HashMap Thread Safety
+# 15. Why Capacity is Power of 2
 
-HashMap is NOT thread-safe.
-
-Example:
-
-Thread 1:
-
-```java
-put(A)
-```
-
-Thread 2:
-
-```java
-put(B)
-```
-
-Both modify bucket simultaneously.
-
-Possible:
-
-```text
-Lost updates
-Corrupted links
-Incorrect size
-```
-
----
-
-# ConcurrentHashMap
-
-Designed for Multi-threading.
-
-```java
-ConcurrentHashMap<K,V>
-```
-
-Goals:
-
-1. Thread Safety
-2. High Throughput
-3. Fine-grained Locking
-
----
-
-# Java 7 ConcurrentHashMap
-
-Used Segments.
-
-```text
-ConcurrentHashMap
-
-Segment 1
-Segment 2
-Segment 3
-Segment 4
-```
-
-Each segment:
-
-```text
-Lock
-+
-Hash Table
-```
-
-Multiple threads can work on different segments.
-
----
-
-# Java 8 ConcurrentHashMap
-
-Segments removed.
-
-Uses:
-
-```text
-Array<Node>
-```
-
-similar to HashMap.
-
-But operations differ.
-
----
-
-# Put in ConcurrentHashMap
-
-Step 1
-
-Calculate bucket.
-
-Step 2
-
-If bucket empty:
-
-```text
-CAS Operation
-```
-
-No lock.
-
----
-
-# What is CAS?
-
-Compare And Swap.
-
-```text
-Expected = null
-
-Actual = null
-
-Update succeeds
-```
-
-Atomic CPU instruction.
-
----
-
-# If Bucket Already Occupied
-
-Lock only bucket.
-
-```java
-synchronized(firstNode)
-```
-
-Not whole map.
-
-Only bucket is blocked.
-
----
-
-# Reads in ConcurrentHashMap
-
-```java
-get(key)
-```
-
-Mostly lock-free.
-
-Multiple readers can access simultaneously.
-
-Huge performance benefit.
-
----
-
-# ConcurrentHashMap Resize
-
-Multiple threads help resize.
-
-```text
-Thread 1 -> Move bucket range 1
-Thread 2 -> Move bucket range 2
-Thread 3 -> Move bucket range 3
-```
-
-Faster than single-thread migration.
-
----
-
-# Why ConcurrentHashMap Is Faster
-
-HashMap + synchronized:
-
-```text
-One global lock
-```
-
-ConcurrentHashMap:
-
-```text
-Bucket level locking
-CAS
-Lock-free reads
-```
-
-Higher concurrency.
-
----
-
-# HashMap vs ConcurrentHashMap
-
-| Feature            | HashMap       | ConcurrentHashMap      |
-| ------------------ | ------------- | ---------------------- |
-| Thread Safe        | No            | Yes                    |
-| Reads              | Fast          | Fast                   |
-| Writes             | Fast          | Fast under concurrency |
-| Locking            | None          | Bucket-level           |
-| Null Key           | Yes           | No                     |
-| Null Value         | Yes           | No                     |
-| Collision Handling | List + Tree   | List + Tree            |
-| Resize             | Single Thread | Cooperative Resize     |
-
----
-
-# HashMap vs Hashtable
-
-| Feature     | HashMap | Hashtable   |
-| ----------- | ------- | ----------- |
-| Thread Safe | No      | Yes         |
-| Locking     | None    | Whole Table |
-| Performance | Faster  | Slower      |
-| Null Key    | Yes     | No          |
-| Null Value  | Yes     | No          |
-
----
-
-# Interview Question:
-
-Why does HashMap use Power of 2 Capacities?
-
-Example:
+Capacities:
 
 ```text
 16
@@ -669,10 +558,12 @@ Example:
 128
 ```
 
-Because index calculation becomes:
+Reason:
+
+HashMap uses:
 
 ```java
-(hash & (capacity - 1))
+hash & (capacity - 1)
 ```
 
 instead of:
@@ -685,17 +576,295 @@ Bitwise operation is much faster.
 
 ---
 
-# Most Important Interview Summary
+# 16. Null Keys and Values
 
-HashMap internally uses:
+HashMap allows:
+
+```java
+map.put(null,100);
+map.put("A",null);
+```
+
+Valid.
+
+HashMap stores null key in bucket 0.
+
+---
+
+# 17. HashMap Thread Safety
+
+HashMap is NOT thread-safe.
+
+Problems:
+
+```text
+Lost Updates
+Corrupted Structure
+Incorrect Size
+Concurrent Resize Issues
+```
+
+Example:
+
+```java
+Thread1 -> put(A)
+
+Thread2 -> put(B)
+```
+
+Can corrupt data.
+
+---
+
+# 18. ConcurrentHashMap Internals
+
+Designed for multi-threading.
+
+Goals:
+
+```text
+Thread Safety
+High Throughput
+Low Lock Contention
+```
+
+---
+
+## Java 7
+
+Used Segmented Locking.
+
+```text
+Segment 1
+Segment 2
+Segment 3
+Segment 4
+```
+
+Each segment had its own lock.
+
+---
+
+## Java 8
+
+Segments removed.
+
+Uses:
+
+```text
+Array<Node>
+```
+
+similar to HashMap.
+
+---
+
+## Put Operation
+
+### Empty Bucket
+
+Uses CAS
+
+```text
+Compare And Swap
+```
+
+No lock required.
+
+---
+
+## Occupied Bucket
+
+Lock only bucket.
+
+```java
+synchronized(firstNode)
+```
+
+Not entire map.
+
+---
+
+## Reads
+
+```java
+get()
+```
+
+Mostly lock-free.
+
+Multiple readers work simultaneously.
+
+---
+
+## Resize
+
+Multiple threads help transfer data.
+
+```text
+Thread1 -> Move Range A
+
+Thread2 -> Move Range B
+
+Thread3 -> Move Range C
+```
+
+Called cooperative resizing.
+
+---
+
+# 19. Why ConcurrentHashMap Disallows Null
+
+HashMap:
+
+```java
+map.put("A",null);
+```
+
+Valid.
+
+ConcurrentHashMap:
+
+```java
+map.put("A",null);
+```
+
+Throws exception.
+
+---
+
+## Reason
+
+Suppose:
+
+```java
+Integer value = map.get("A");
+```
+
+returns:
+
+```text
+null
+```
+
+Question:
+
+Did key exist with null value?
+
+OR
+
+Did key not exist?
+
+OR
+
+Was key removed by another thread?
+
+Impossible to know.
+
+Therefore:
+
+```text
+Null Keys -> Not Allowed
+
+Null Values -> Not Allowed
+```
+
+Now:
+
+```java
+map.get(key) == null
+```
+
+always means:
+
+```text
+Key absent
+```
+
+---
+
+# 20. HashMap vs ConcurrentHashMap
+
+| Feature            | HashMap       | ConcurrentHashMap |
+| ------------------ | ------------- | ----------------- |
+| Thread Safe        | No            | Yes               |
+| Null Key           | Yes           | No                |
+| Null Value         | Yes           | No                |
+| Reads              | Fast          | Lock Free         |
+| Writes             | Fast          | Bucket Locked     |
+| Collision Handling | List + Tree   | List + Tree       |
+| Resize             | Single Thread | Cooperative       |
+| Synchronization    | None          | Fine Grained      |
+
+---
+
+# 21. Interview Questions
+
+### Why does HashMap use equals()?
+
+Answer:
+
+hashCode finds bucket.
+
+equals finds exact key inside bucket.
+
+---
+
+### Why override hashCode and equals together?
+
+Answer:
+
+If equal objects generate different hashes, lookup fails.
+
+---
+
+### Why collisions occur?
+
+Different keys can generate same bucket index.
+
+---
+
+### Why treeify at 8 nodes?
+
+To improve lookup from O(n) to O(log n).
+
+---
+
+### Why load factor 0.75?
+
+Balances memory usage and performance.
+
+---
+
+### Why ConcurrentHashMap doesn't allow null?
+
+Because null return values become ambiguous in concurrent environments.
+
+---
+
+### Why power-of-two capacity?
+
+To use:
+
+```java
+hash & (capacity - 1)
+```
+
+which is faster than modulo.
+
+---
+
+# 22. Quick Revision Notes
+
+HashMap:
 
 ```text
 Array
- +
++
 Hashing
- +
++
 Linked List
- +
++
 Red Black Tree
 ```
 
@@ -706,36 +875,45 @@ Key
  ↓
 hashCode()
  ↓
-Bucket Index
+Bucket
  ↓
-Store Node
+equals()
+ ↓
+Value
 ```
 
 Collision:
 
 ```text
-Linked List
+Separate Chaining
 ```
 
-Heavy Collision:
+Resize:
 
 ```text
-Red Black Tree
+Load Factor > 0.75
 ```
 
-Load Factor > 0.75:
+Treeification:
 
 ```text
-Rehash
+Bucket Size >= 8
 ```
 
-ConcurrentHashMap adds:
+ConcurrentHashMap:
 
 ```text
 CAS
-Bucket Locks
++
+Bucket Locking
++
 Lock-Free Reads
++
 Cooperative Resize
 ```
 
-to make the structure thread-safe while maintaining near O(1) operations.
+Golden Rule:
+
+hashCode() determines WHERE to search.
+
+equals() determines WHAT to match.
